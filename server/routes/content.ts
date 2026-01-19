@@ -1,11 +1,11 @@
 
 import express from 'express';
 import { Course } from '../models/Content.js';
-import { AuthRequest, validateWhopToken } from '../middleware/auth.js';
+import { validateWhopToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/content/courses', validateWhopToken, async (req: AuthRequest, res) => {
+router.get('/content/courses', validateWhopToken, async (req, res) => {
     try {
         // In real app, check req.user.role to unlock
         const courses = await Course.find();

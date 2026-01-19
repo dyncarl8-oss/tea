@@ -1,10 +1,10 @@
 
 import express from 'express';
-import { AuthRequest, validateWhopToken } from '../middleware/auth.js';
+import { validateWhopToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/affiliate/stats', validateWhopToken, async (req: AuthRequest, res) => {
+router.get('/affiliate/stats', validateWhopToken, async (req, res) => {
     // Mock data for now, would fetch from DB/Whop
     res.json({
         totalEarnings: 1250.50,
