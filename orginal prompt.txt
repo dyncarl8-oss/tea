@@ -1,0 +1,376 @@
+You are a senior full-stack SaaS product designer and developer.
+
+Goal:
+Build a Whop-based web app called a Hybrid Community & Affiliate Portal that combines education, monetization, and social-selling into one unified interface.
+
+This platform serves a tea & herbal wellness brand with a “phygital” strategy (physical products + digital ecosystem).
+
+CORE MODULES (MVP = ALL 3)
+1) Symptom-to-Stems Tool (Recommendation + Referral System)
+
+Purpose:
+Help users or social media followers input symptoms and get recommended herbal blends, rituals, and products — with built-in affiliate tracking.
+
+Features:
+
+Simple input interface (dropdowns + free text)
+
+Common symptoms:
+
+Cold / flu
+
+Fatigue
+
+Stress
+
+Digestion
+
+Sleep
+
+Immunity
+
+Anxiety
+
+Inflammation
+
+Output:
+
+Recommended blend(s)
+
+Ingredients
+
+Benefits
+
+Brewing ritual instructions
+
+Educational snippet
+
+Each recommendation should generate a shareable affiliate link
+
+Ability for influencers to embed or link this tool
+
+Save past searches
+
+Admin can configure:
+
+Symptoms → blend mapping
+
+Educational snippets
+
+Recipes
+
+Pricing
+
+Availability
+
+2) Gated Paid Community (Subscription System)
+
+Name: The Steep Circle
+
+Purpose:
+Create recurring revenue and education hub.
+
+Features:
+
+Whop-based subscription paywall
+
+Content types:
+
+Video masterclasses
+
+PDF lessons
+
+Live Q&A portals
+
+Replays
+
+Courses
+
+Herbal education
+
+Business + personal finance content
+
+Content organization:
+
+Categories
+
+Playlists
+
+Courses
+
+Search
+
+Member profiles
+
+Community feed or discussion boards
+
+Comments + reactions
+
+Notifications
+
+Admin CMS:
+
+Upload videos
+
+Upload PDFs
+
+Create lessons
+
+Lock/unlock content
+
+Schedule live sessions
+
+Progress tracking
+
+Certificates or completion markers
+
+3) Influencer / Affiliate Dashboard (Social-Selling System)
+
+Purpose:
+Make it extremely easy for members to promote and earn.
+
+Features:
+
+Unique affiliate ID per member
+
+Commission tracking:
+
+Product sales
+
+Subscription sales
+
+Earnings dashboard:
+
+Daily
+
+Weekly
+
+Monthly
+
+Lifetime
+
+Withdrawal via Whop
+
+Asset library:
+
+Canva templates
+
+B-roll
+
+Product images
+
+Caption templates
+
+Hook ideas
+
+Scripts
+
+Copy-paste social captions
+
+Shareable links
+
+QR codes
+
+Campaign tracking
+
+Leaderboard (optional)
+
+Referral performance analytics
+
+ADMIN PANEL
+
+Purpose: Full control.
+
+Admin Features:
+
+User management
+
+Role assignment (admin, member, affiliate)
+
+Content management
+
+Symptom-to-product mapping editor
+
+Commission settings
+
+Campaign creation
+
+Asset uploads
+
+Analytics dashboard
+
+Revenue tracking
+
+Subscription management
+
+Notifications broadcast
+
+Feature flags
+
+A/B testing (optional later)
+
+TECH REQUIREMENTS
+
+Built as a Whop App
+
+Mobile responsive
+
+Clean, minimal UI
+
+Wellness aesthetic
+
+Caribbean-inspired color palette
+
+Fast load times
+
+Modular architecture
+
+Scalable backend
+
+API-first
+
+Secure authentication
+
+GDPR-friendly
+
+Stripe handled by Whop
+
+USER FLOWS
+Regular User
+
+Lands on app
+
+Uses symptom tool
+
+Gets recommendation
+
+Buys product OR joins The Steep Circle
+
+Becomes a member
+
+Optionally upgrades to affiliate
+
+Influencer / Affiliate
+
+Joins
+
+Gets dashboard
+
+Gets unique links
+
+Uses content assets
+
+Shares
+
+Earns commission
+
+Admin
+
+Uploads content
+
+Manages symptoms → blends
+
+Launches campaigns
+
+Tracks revenue
+
+Manages payouts
+
+PHASED BUILD (MVP FIRST)
+MVP MUST INCLUDE:
+
+Symptom-to-Stems tool
+
+Gated community
+
+Affiliate dashboard
+
+Whop integration
+
+Admin panel
+
+Content uploads
+
+Commission tracking
+
+Phase 2 (Later):
+
+AI personalization
+
+Chatbot herbal assistant
+
+Mobile app
+
+Gamification
+
+Streaks
+
+Challenges
+
+NFT loyalty
+
+Personalized rituals
+
+DESIGN STYLE
+
+Calm
+
+Herbal
+
+Premium
+
+Earth tones
+
+Simple
+
+Minimal
+
+High trust
+
+Not medical claims
+
+DATA MODELS
+
+Users
+
+Roles
+
+Symptoms
+
+Blends
+
+Products
+
+Courses
+
+Lessons
+
+Videos
+
+PDFs
+
+Affiliates
+
+Referrals
+
+Campaigns
+
+Commissions
+
+Payouts
+
+Assets
+
+IMPORTANT: BUSINESS LOGIC
+
+Two commission systems:
+
+Product affiliate commission
+
+Subscription commission
+
+Must be tracked separately
+
+Lifetime attribution
+
+account-based
