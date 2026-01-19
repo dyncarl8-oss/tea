@@ -2,11 +2,11 @@
 import express from 'express';
 import User from '../models/User.js';
 import { Product } from '../models/Content.js';
-import { validateWhopToken } from '../middleware/auth.js';
+import { validateWhopToken, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/admin/stats', validateWhopToken, async (req, res) => {
+router.get('/admin/stats', validateWhopToken, async (req: AuthRequest, res) => {
     try {
         const userCount = await User.countDocuments();
         const productCount = await Product.countDocuments();
