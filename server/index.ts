@@ -58,8 +58,8 @@ if (process.env.NODE_ENV === 'production') {
 
     app.use(express.static(publicPath));
 
-    // Catch-all route for SPA
-    app.get('(.*)', (req, res, next) => {
+    // Catch-all route for SPA - using app.use to avoid path-to-regexp issues in Express 5
+    app.use((req, res, next) => {
         if (req.path.startsWith('/api')) {
             return next();
         }
