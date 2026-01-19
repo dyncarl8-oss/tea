@@ -2,12 +2,13 @@ export type UserRole = 'guest' | 'member' | 'affiliate' | 'admin';
 
 export interface User {
   id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  role: UserRole;
+  whopUserId: string;
+  username: string;
+  email?: string;
+  avatarUrl?: string;
+  role: 'guest' | 'member' | 'affiliate' | 'admin';
   affiliateId?: string;
-  earnings?: number;
+  metadata?: Record<string, string>;
 }
 
 export interface Symptom {

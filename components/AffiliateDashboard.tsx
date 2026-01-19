@@ -36,7 +36,7 @@ export const AffiliateDashboard: React.FC<AffiliateDashboardProps> = ({ user }) 
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-serif text-brand-dark">Affiliate Hub</h2>
-          <p className="text-stone-600">Welcome back, {user.name}. Here's how your influence is growing.</p>
+          <p className="text-stone-600">Welcome back, {user.username}. Here's how your influence is growing.</p>
         </div>
         <button className="bg-brand-accent text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-orange-500 transition-colors">
           Withdraw Funds via Whop

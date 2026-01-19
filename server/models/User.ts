@@ -7,24 +7,24 @@ export interface IUser extends Document {
     whopUserId: string;
     username: string;
     email?: string;
-    avatar?: string;
+    avatarUrl?: string;
     role: UserRole;
-    affiliateCode?: string;
+    affiliateId?: string;
+    metadata?: Map<string, string>;
+    lastSync: Date;
     createdAt: Date;
     updatedAt: Date;
 }
 
-const UserSchema: Schema = new Schema({
+const UserSchema = new Schema<IUser>({
     whopUserId: { type: String, required: true, unique: true },
     username: { type: String, required: true },
-    email: { type: String },
-    avatar: { type: String },
-    role: {
-        type: String,
-        enum: ['guest', 'member', 'affiliate', 'admin'],
-        default: 'guest'
-    },
-    affiliateCode: { type: String, unique: true, sparse: true },
+    email: String,
+    avatarUrl: String,
+    role: { type: String, enum: ['guest', 'member', 'affiliate', 'admin'], default: 'guest' },
+    affiliateId: String,
+    metadata: { type: Map, of: String },
+    lastSync: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-export default mongoose.model<IUser>('User', UserSchema);
+export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

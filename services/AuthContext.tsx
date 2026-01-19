@@ -23,50 +23,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchUser = async (token?: string) => {
-        try {
-            const { data } = await api.get('/auth/me');
-            setUser(data.user);
-        } catch (error) {
-            console.error('Failed to fetch user', error);
-            setUser(null);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     useEffect(() => {
-        // Check for token in URL (simulating Whop Iframe pass)
-        const params = new URLSearchParams(window.location.search);
-        const tokenFromUrl = params.get('whop_user_token'); // Hypothetical
+        const syncUser = async () => {
+            // 1. Extract token from URL (Whop iFrame pass)
+            const params = new URLSearchParams(window.location.search);
+            const urlToken = params.get('whop_user_token');
 
-        // Or check localStorage
-        const storedToken = localStorage.getItem('whop_user_token');
+            if (urlToken) {
+                localStorage.setItem('whop_user_token', urlToken);
+            }
 
-        if (tokenFromUrl) {
-            localStorage.setItem('whop_user_token', tokenFromUrl);
-            // Sync with backend
-            api.post('/auth/login').then(res => {
-                setUser(res.data.user);
+            const token = localStorage.getItem('whop_user_token');
+
+            if (!token) {
                 setIsLoading(false);
-            }).catch(() => setIsLoading(false));
-        } else if (storedToken) {
-            // validate session
-            fetchUser();
-        } else {
-            setIsLoading(false);
-        }
+                return;
+            }
+
+            try {
+                // 2. Sync with backend (upserts user and gets latest profile/role)
+                const res = await api.post('/auth/login');
+                setUser(res.data);
+            } catch (err) {
+                console.error('Auto-sync failed', err);
+                if ((err as any).response?.status === 401) {
+                    localStorage.removeItem('whop_user_token');
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        syncUser();
     }, []);
 
     const login = async () => {
-        // In a real Whop app, we might redirect to OAuth or just wait for iframe token
-        // For DEV mode: Simulate a login
-        const devToken = prompt("Enter Dev Whop Token (or leave empty for Guest)");
-        if (devToken) {
-            localStorage.setItem('whop_user_token', devToken);
-            const res = await api.post('/auth/login');
-            setUser(res.data.user);
-        }
+        console.log("Whop automatic authentication is active.");
     };
 
     const logout = () => {
