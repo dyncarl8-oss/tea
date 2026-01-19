@@ -8,7 +8,6 @@ const router = express.Router();
 const sdk = new WhopSDK.Whop({ apiKey: process.env.WHOP_API_KEY });
 const COMPANY_ID = process.env.WHOP_COMPANY_ID;
 
-// Use explicit type casting for Whop User object to avoid TS errors on dynamic properties
 interface WhopUserResponse {
     username: string;
     email?: string;
@@ -20,41 +19,52 @@ interface WhopUserResponse {
 router.post('/login', validateWhopToken, async (req, res) => {
     try {
         const whopUserId = req.user?.whopUserId;
+        console.log(`[SYNC TRACE] Starting sync for User: ${whopUserId}`);
 
         if (!whopUserId) {
-            return res.status(401).json({ error: 'User ID not found in token' });
+            return res.status(401).json({ error: 'User ID missing' });
         }
 
-        // 1. Fetch User Info - Support both string and object signatures to be safe with SDK versions
+        // 1. Fetch User Info
         let whopUser: WhopUserResponse;
         try {
+            console.log('[SYNC TRACE] Fetching user profile from Whop...');
             whopUser = (await sdk.users.retrieve(whopUserId)) as any;
-        } catch (e) {
+            console.log(`[SYNC TRACE] Profile retrieved: @${whopUser.username}`);
+        } catch (e: any) {
+            console.warn('[SYNC TRACE] Standard retrieve failed, trying fallback...', e.message);
             whopUser = (await (sdk.users as any).retrieve({ userId: whopUserId })) as any;
         }
 
-        // 2. Identify Role using checkAccess
+        // 2. Role Detection with Diagnostics
         let role: 'guest' | 'member' | 'affiliate' | 'admin' = 'guest';
 
         if (COMPANY_ID) {
+            console.log(`[SYNC TRACE] Checking access for Company: ${COMPANY_ID}`);
             try {
                 const access = await sdk.users.checkAccess(COMPANY_ID, { id: whopUserId });
+                console.log(`[SYNC TRACE] Access Level: ${access.access_level}, Has Access: ${access.has_access}`);
+
                 if (access.access_level === 'admin') {
                     role = 'admin';
                 } else if (access.access_level === 'customer' || access.has_access) {
                     role = 'member';
                 }
-            } catch (e) {
-                console.error('Access check failed:', e);
+            } catch (e: any) {
+                console.error('[SYNC TRACE] checkAccess EXCEPTION:', e.message);
             }
+        } else {
+            console.warn('[SYNC TRACE] WHOP_COMPANY_ID is NOT DEFINED. Skipping deep role check.');
         }
 
-        // 3. Fallback for Admin role if checkAccess skipped/failed
         if (role === 'guest' && whopUser.is_admin) {
+            console.log('[SYNC TRACE] Falling back to is_admin flat property for Admin role.');
             role = 'admin';
         }
 
-        // 4. Update or Create Local User
+        console.log(`[SYNC TRACE] FINAL DETERMINED ROLE: ${role}`);
+
+        // 3. Database Sync
         const user = await User.findOneAndUpdate(
             { whopUserId },
             {
@@ -68,9 +78,9 @@ router.post('/login', validateWhopToken, async (req, res) => {
         );
 
         res.json(user);
-    } catch (error) {
-        console.error('Auth sync error:', error);
-        res.status(500).json({ error: 'Failed to sync with Whop' });
+    } catch (error: any) {
+        console.error('[SYNC TRACE] CRITICAL SYNC ERROR:', error.message);
+        res.status(500).json({ error: 'Sync failed' });
     }
 });
 
@@ -78,10 +88,13 @@ router.get('/me', validateWhopToken, async (req, res) => {
     try {
         const whopUserId = req.user?.whopUserId;
         const user = await User.findOne({ whopUserId });
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        if (!user) {
+            console.log(`[ME TRACE] Local session not found for ${whopUserId}`);
+            return res.status(404).json({ error: 'User not found' });
+        }
         res.json(user);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch user' });
+        res.status(500).json({ error: 'Fetch failed' });
     }
 });
 
