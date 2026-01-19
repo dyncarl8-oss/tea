@@ -19,31 +19,33 @@ interface WhopUserResponse {
 router.post('/login', validateWhopToken, async (req, res) => {
     try {
         const whopUserId = req.user?.whopUserId;
-        console.log(`[SYNC TRACE] Starting sync for User: ${whopUserId}`);
+        console.log('--- TRIBAL SYNC START ---');
+        console.log('Syncing identity for Whop UID:', whopUserId);
 
         if (!whopUserId) {
+            console.error('SERVER LOG: No whopUserId available in request.');
             return res.status(401).json({ error: 'User ID missing' });
         }
 
-        // 1. Fetch User Info
+        // 1. Profile Retrieval
         let whopUser: WhopUserResponse;
         try {
-            console.log('[SYNC TRACE] Fetching user profile from Whop...');
+            console.log('SERVER LOG: Retrieving profile from Whop...');
             whopUser = (await sdk.users.retrieve(whopUserId)) as any;
-            console.log(`[SYNC TRACE] Profile retrieved: @${whopUser.username}`);
+            console.log('SERVER LOG: Profile found for @', whopUser.username);
         } catch (e: any) {
-            console.warn('[SYNC TRACE] Standard retrieve failed, trying fallback...', e.message);
+            console.warn('SERVER LOG: Standard retrieval failed, attempting legacy fix...');
             whopUser = (await (sdk.users as any).retrieve({ userId: whopUserId })) as any;
         }
 
-        // 2. Role Detection with Diagnostics
+        // 2. Role Gating via checkAccess
         let role: 'guest' | 'member' | 'affiliate' | 'admin' = 'guest';
 
         if (COMPANY_ID) {
-            console.log(`[SYNC TRACE] Checking access for Company: ${COMPANY_ID}`);
+            console.log('SERVER LOG: Validating access against Company:', COMPANY_ID);
             try {
                 const access = await sdk.users.checkAccess(COMPANY_ID, { id: whopUserId });
-                console.log(`[SYNC TRACE] Access Level: ${access.access_level}, Has Access: ${access.has_access}`);
+                console.log('SERVER LOG: checkAccess Result -> Level:', access.access_level, '| Has Access:', access.has_access);
 
                 if (access.access_level === 'admin') {
                     role = 'admin';
@@ -51,20 +53,16 @@ router.post('/login', validateWhopToken, async (req, res) => {
                     role = 'member';
                 }
             } catch (e: any) {
-                console.error('[SYNC TRACE] checkAccess EXCEPTION:', e.message);
+                console.error('SERVER LOG: checkAccess API Error:', e.message);
             }
         } else {
-            console.warn('[SYNC TRACE] WHOP_COMPANY_ID is NOT DEFINED. Skipping deep role check.');
+            console.warn('SERVER LOG: WHOP_COMPANY_ID is NULL. Defaulting to fallback role detection.');
+            if (whopUser.is_admin) role = 'admin';
         }
 
-        if (role === 'guest' && whopUser.is_admin) {
-            console.log('[SYNC TRACE] Falling back to is_admin flat property for Admin role.');
-            role = 'admin';
-        }
+        console.log('SERVER LOG: Synchronizing database with role:', role);
 
-        console.log(`[SYNC TRACE] FINAL DETERMINED ROLE: ${role}`);
-
-        // 3. Database Sync
+        // 3. Database Upsert
         const user = await User.findOneAndUpdate(
             { whopUserId },
             {
@@ -77,10 +75,13 @@ router.post('/login', validateWhopToken, async (req, res) => {
             { upsert: true, new: true }
         );
 
+        console.log('SERVER LOG: Identity Synchronized Successfully.');
+        console.log('--- TRIBAL SYNC END ---');
+
         res.json(user);
     } catch (error: any) {
-        console.error('[SYNC TRACE] CRITICAL SYNC ERROR:', error.message);
-        res.status(500).json({ error: 'Sync failed' });
+        console.error('SERVER LOG: CRITICAL FAIL in /login sync:', error.message);
+        res.status(500).json({ error: 'Profile synchronization failed' });
     }
 });
 
@@ -89,12 +90,12 @@ router.get('/me', validateWhopToken, async (req, res) => {
         const whopUserId = req.user?.whopUserId;
         const user = await User.findOne({ whopUserId });
         if (!user) {
-            console.log(`[ME TRACE] Local session not found for ${whopUserId}`);
-            return res.status(404).json({ error: 'User not found' });
+            console.warn('SERVER LOG: No local session for verified UID:', whopUserId);
+            return res.status(404).json({ error: 'Session not found' });
         }
         res.json(user);
     } catch (error) {
-        res.status(500).json({ error: 'Fetch failed' });
+        res.status(500).json({ error: 'Retrieval failed' });
     }
 });
 

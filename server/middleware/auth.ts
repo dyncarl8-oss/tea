@@ -16,43 +16,46 @@ declare global {
 const WHOP_API_KEY = process.env.WHOP_API_KEY;
 
 if (!WHOP_API_KEY) {
-    console.error('CRITICAL ERROR: WHOP_API_KEY is not set in environment variables.');
+    console.error('SERVER LOG ERROR: WHOP_API_KEY is null or undefined.');
 }
 
 const sdk = new WhopSDK.Whop({ apiKey: WHOP_API_KEY || 'missing_key' });
 
 /**
- * Validates the Whop user token.
- * Added deep instrumentation to trace identity flow on Render.
+ * Hyper-Verbose Whop Token Validation.
+ * Logs specifically for the Render console.
  */
 export const validateWhopToken = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers['x-whop-user-token'] as string;
 
-    // LOG 1: Raw Header Trace (Masked)
-    if (token) {
-        console.log(`[AUTH TRACE] Token Header Detected: ${token.substring(0, 10)}...${token.substring(token.length - 5)}`);
-    } else {
-        console.warn('[AUTH TRACE] x-whop-user-token header is MISSING');
-    }
+    // SERVER LOG: Header Inspection
+    console.log('--- WHOP AUTH ATTEMPT ---');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Path:', req.path);
+    console.log('Headers:', JSON.stringify({
+        ...req.headers,
+        'x-whop-user-token': token ? `PRESENT (${token.length} chars)` : 'MISSING'
+    }, null, 2));
 
     if (!token) {
-        return res.status(401).json({ error: 'Identity required. Access via Whop Hub.' });
+        console.warn('SERVER LOG: Blocking request - No x-whop-user-token provided.');
+        return res.status(401).json({ error: 'Identity required. Please access via Whop.' });
     }
 
     try {
-        console.log('[AUTH TRACE] Attempting verifyUserToken...');
+        console.log('SERVER LOG: Calling sdk.verifyUserToken...');
         const verification = await sdk.verifyUserToken(req.headers as any);
 
         if (!verification || !verification.userId) {
-            console.error('[AUTH TRACE] Verification failed: No userId in payload', verification);
-            return res.status(401).json({ error: 'Whop identity verification failed.' });
+            console.error('SERVER LOG: Verification Payload INVALID:', JSON.stringify(verification));
+            return res.status(401).json({ error: 'Whop token verification failed.' });
         }
 
-        console.log(`[AUTH TRACE] SUCCESS: Verified User ID: ${verification.userId}`);
+        console.log('SERVER LOG: SUCCESS - Verified User ID:', verification.userId);
         req.user = { whopUserId: verification.userId };
         next();
     } catch (error: any) {
-        console.error('[AUTH TRACE] EXCEPTION during verification:', error.message || error);
-        return res.status(401).json({ error: 'Token validation exception.' });
+        console.error('SERVER LOG: EXCEPTION in verifyUserToken:', error.message || error);
+        return res.status(401).json({ error: 'Identity validation exception.' });
     }
 };

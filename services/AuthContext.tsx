@@ -23,43 +23,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const syncUser = async () => {
-            console.log('[FE TRACE] Initializing tribal sync...');
-
-            // 1. Log full environment for diagnostics
-            console.log('[FE TRACE] Current URL:', window.location.href);
-
-            // 2. Extract token from URL
+            // Silence frontend logs as requested. Diagnostics occur on server.
             const params = new URLSearchParams(window.location.search);
-            let token = params.get('whop_user_token');
+            const tokenFromUrl = params.get('whop_user_token');
 
-            if (token) {
-                console.log('[FE TRACE] Token captured from URL parameters.');
-                localStorage.setItem('whop_user_token', token);
-            } else {
-                token = localStorage.getItem('whop_user_token');
-                if (token) {
-                    console.log('[FE TRACE] Token retrieved from LocalStorage.');
-                }
+            if (tokenFromUrl) {
+                localStorage.setItem('whop_user_token', tokenFromUrl);
             }
 
+            const token = localStorage.getItem('whop_user_token');
+
             if (!token) {
-                console.warn('[FE TRACE] No Whop token found in URL or Storage. User is anonymous.');
                 setIsLoading(false);
                 return;
             }
 
             try {
-                console.log('[FE TRACE] Sending sync request to backend...');
-                // The API interceptor will attach the token to the header
+                // Synchronize silently with backend
                 const res = await api.post('/auth/login');
-                console.log('[FE TRACE] Sync Successful! User:', res.data.username, 'Role:', res.data.role);
                 setUser(res.data);
             } catch (err: any) {
-                console.error('[FE TRACE] Sync Request Failed:', err.response?.data || err.message);
-
-                // If 401, token is definitely bad
+                // Fail silently on frontend, error will reflect in server logs
                 if (err.response?.status === 401) {
-                    console.warn('[FE TRACE] 401 Unauthorized - Clearing stale token.');
                     localStorage.removeItem('whop_user_token');
                     setUser(null);
                 }
