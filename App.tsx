@@ -43,8 +43,8 @@ const AppContent: React.FC = () => {
         setMobileMenuOpen(false);
       }}
       className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all duration-200 ${currentView === view
-          ? 'bg-brand-primary text-white shadow-md'
-          : 'text-stone-600 hover:bg-stone-100'
+        ? 'bg-brand-primary text-white shadow-md'
+        : 'text-stone-600 hover:bg-stone-100'
         }`}
     >
       <Icon className="h-5 w-5" />
@@ -167,14 +167,6 @@ const App: React.FC = () => {
   );
 };
 
-const LockIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-  </svg>
-)
-
-export default App;
 const LockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
