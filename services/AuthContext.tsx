@@ -6,14 +6,12 @@ import { User } from '../types';
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
-    login: () => Promise<void>;
     logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
     isLoading: true,
-    login: async () => { },
     logout: () => { },
 });
 
@@ -25,29 +23,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         const syncUser = async () => {
-            // 1. Extract token from URL (Whop iFrame pass)
+            // 1. Prioritize token from URL (Whop iFrame behavior)
             const params = new URLSearchParams(window.location.search);
             const urlToken = params.get('whop_user_token');
 
             if (urlToken) {
+                console.log('Capturing tribal token from URL...');
                 localStorage.setItem('whop_user_token', urlToken);
             }
 
             const token = localStorage.getItem('whop_user_token');
 
             if (!token) {
+                console.log('No tribal identity found yet.');
                 setIsLoading(false);
                 return;
             }
 
             try {
-                // 2. Sync with backend (upserts user and gets latest profile/role)
+                // 2. Synchronize with backend
+                // The API interceptor will automatically attach the token from localStorage
                 const res = await api.post('/auth/login');
+                console.log('Tribal identity verified:', res.data.username);
                 setUser(res.data);
             } catch (err) {
-                console.error('Auto-sync failed', err);
+                console.error('Tribal synchronization failed:', err);
+                // On 401, the token is likely stale
                 if ((err as any).response?.status === 401) {
                     localStorage.removeItem('whop_user_token');
+                    setUser(null);
                 }
             } finally {
                 setIsLoading(false);
@@ -57,17 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         syncUser();
     }, []);
 
-    const login = async () => {
-        console.log("Whop automatic authentication is active.");
-    };
-
     const logout = () => {
         localStorage.removeItem('whop_user_token');
         setUser(null);
+        window.location.href = 'https://whop.com/hub';
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+        <AuthContext.Provider value={{ user, isLoading, logout }}>
             {children}
         </AuthContext.Provider>
     );
