@@ -2,23 +2,23 @@
 import express from 'express';
 import WhopSDK from '@whop/sdk';
 import User from '../models/User.js';
-import { validateWhopToken } from '../middleware/auth.js';
+import { validateWhopToken, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 const sdk = new WhopSDK.Whop({ apiKey: process.env.WHOP_API_KEY });
 
 // Login / Sync Route
-router.post('/login', validateWhopToken, async (req, res) => {
+router.post('/login', validateWhopToken, async (req: AuthRequest, res) => {
     try {
         const { whopUserId } = req.user!;
 
         // 1. Fetch User from Whop with expanded info
         let whopUser: any;
         try {
-            whopUser = await sdk.users.retrieve({ userId: whopUserId });
+            whopUser = await sdk.users.retrieve(whopUserId);
         } catch (e) {
             // Fallback for different SDK versions
-            whopUser = await sdk.users.retrieve(whopUserId as any);
+            whopUser = await (sdk.users as any).retrieve({ userId: whopUserId });
         }
 
         // 2. Advanced Role Detection
@@ -61,7 +61,7 @@ router.post('/login', validateWhopToken, async (req, res) => {
 });
 
 // Get current user info
-router.get('/me', validateWhopToken, async (req, res) => {
+router.get('/me', validateWhopToken, async (req: AuthRequest, res) => {
     try {
         const user = await User.findOne({ whopUserId: req.user!.whopUserId });
         if (!user) return res.status(404).json({ error: 'User not found' });
